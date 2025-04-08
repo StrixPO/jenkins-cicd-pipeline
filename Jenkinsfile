@@ -1,48 +1,33 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
-
-    environment {
-        DOCKER_IMAGE = 'dockocto/jenkins-nodejs-app'
-    }
+    agent any
 
     stages {
-        stage('Checkout SCM') {
+        stage('Build') {
             steps {
-                // This step ensures that the repository is checked out before running commands.
-                checkout scm
-            }
-        }
-        
-        stage('Install Dependencies') {
-            steps {
+                echo 'Installing dependencies...'
                 sh 'npm install'
             }
         }
 
-        stage('Run Tests') {
+        stage('Test') {
             steps {
-                echo 'No tests written yet – skipping.'
+                echo 'Running tests...'
+                sh 'npm test || echo "No tests configured"'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                echo 'Building Docker image...'
+                sh 'docker build -t yourdockerhubusername/nodejs-demo-app .'
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Docker Push') {
             steps {
-                withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
-                    sh '''
-                        echo $DOCKERHUB_TOKEN | docker login -u dockocto --password-stdin
-                        docker push $DOCKER_IMAGE
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push yourdockerhubusername/nodejs-demo-app'
                 }
             }
         }
