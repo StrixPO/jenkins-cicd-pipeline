@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'node:20'
+            image 'node:18'
             args '-v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
@@ -19,21 +19,19 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                echo 'No tests yet.'
+                echo 'No tests written yet – skipping.'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image $DOCKER_IMAGE"
-                sh 'docker build -t $DOCKER_IMAGE . --no-cache -v'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Push to DockerHub') {
             steps {
                 withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
-                    echo 'Logging into DockerHub and pushing the image'
                     sh '''
                         echo $DOCKERHUB_TOKEN | docker login -u dockocto --password-stdin
                         docker push $DOCKER_IMAGE
