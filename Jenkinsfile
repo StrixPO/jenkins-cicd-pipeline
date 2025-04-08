@@ -19,7 +19,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                echo 'No tests written yet – skipping.'
+                echo 'No tests yet.'
             }
         }
 
