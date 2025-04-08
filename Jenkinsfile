@@ -11,17 +11,13 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Repository') {
+        stage('Checkout SCM') {
             steps {
-                script {
-                    // Ensure we're in the right Git repo
-                    sh 'git init'
-                    sh 'git remote add origin https://github.com/StrixPO/jenkins-cicd-pipeline.git'
-                    sh 'git fetch'
-                    sh 'git checkout main'
-                }
+                // This step ensures that the repository is checked out before running commands.
+                checkout scm
             }
         }
+        
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
