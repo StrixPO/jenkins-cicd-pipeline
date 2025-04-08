@@ -33,38 +33,59 @@ The pipeline is defined in the `Jenkinsfile` and includes the following stages:
 pipeline {
     agent any
 
+    environment {
+        // Docker image name 
+        DOCKER_IMAGE = "dockocto/nodejs-demo-app"
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout Code') {
             steps {
-                echo 'Installing dependencies...'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
                 sh 'npm install'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
-                echo 'Running tests...'
-                sh 'npm test || echo "No tests configured"'
+                echo 'No tests configured yet.'
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t dockocto/nodejs-demo-app .'
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}")
+                }
             }
         }
 
-        stage('Docker Push') {
+        stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push dockocto/nodejs-demo-app'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                        dockerImage.push('latest')
+                    }
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo '✅ Build and push successful!'
+        }
+        failure {
+            echo '❌ Build failed!'
+        }
+    }
 }
+
 ```
 
 🔐 Jenkins Credentials Setup
@@ -90,15 +111,4 @@ Building and pushing Docker images in CI/CD
 Managing credentials securely in Jenkins
 
 
-📂 Project Structure
-pgsql
-Copy
-Edit
-nodejs-demo-app/
-├── Jenkinsfile
-├── Dockerfile
-├── index.js
-├── package.json
-├── .gitignore
-└── README.md
 
