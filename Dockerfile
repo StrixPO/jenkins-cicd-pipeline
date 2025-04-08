@@ -1,20 +1,18 @@
-#Base image
-FROM node:20
+# Use official Node.js LTS image
+FROM node:20-alpine
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Copy dependency files first (layer caching)
+# Copy and install dependencies
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm install
-
-# Copy remaining app files
+# Copy the rest of the app
 COPY . .
 
-# Expose the port your app runs on
+# Expose the app port
 EXPOSE 3000
 
-# start app
-CMD ["npm", "start"]
+# Run the app
+CMD ["node", "index.js"]

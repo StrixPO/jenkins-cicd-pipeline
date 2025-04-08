@@ -1,35 +1,55 @@
 pipeline {
     agent any
 
+    environment {
+        // Docker image name (change this to your Docker Hub username/repo)
+        DOCKER_IMAGE = "dockocto/nodejs-demo-app"
+    }
+
     stages {
-        stage('Build') {
+        stage('Checkout Code') {
             steps {
-                echo 'Installing dependencies...'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
                 sh 'npm install'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
-                echo 'Running tests...'
-                sh 'npm test || echo "No tests configured"'
+                echo 'No tests configured yet.'
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t yourdockerhubusername/nodejs-demo-app .'
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push yourdockerhubusername/nodejs-demo-app'
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}")
                 }
             }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build and push successful!'
+        }
+        failure {
+            echo '❌ Build failed!'
         }
     }
 }
