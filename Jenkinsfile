@@ -1,5 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+
+    environment {
+        DOCKER_IMAGE = 'dockocto/jenkins-nodejs-app'
+    }
 
     stages {
         stage('Install Dependencies') {
@@ -16,7 +25,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t dockocto/jenkins-nodejs-app .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
@@ -25,7 +34,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKERHUB_TOKEN')]) {
                     sh '''
                         echo $DOCKERHUB_TOKEN | docker login -u yourdockerhubusername --password-stdin
-                        docker push yourdockerhubusername/jenkins-nodejs-app
+                        docker push $DOCKER_IMAGE
                     '''
                 }
             }
