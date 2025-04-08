@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Docker image name (change this to your Docker Hub username/repo)
+        // Docker image name
         DOCKER_IMAGE = "dockocto/nodejs-demo-app"
     }
 
